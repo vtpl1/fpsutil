@@ -1,6 +1,6 @@
 {
   "name": "fpsutil",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Fps util",
   "homepage": "http://github.com/fpsutil",
   "builtin-baseline": "e85b5bb95a14ff7e014601e88a8dc2fea6798e33",
