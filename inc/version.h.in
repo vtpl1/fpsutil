@@ -1,0 +1,9 @@
+// *****************************************************
+//    Copyright 2022 Videonetics Technology Pvt Ltd
+// *****************************************************
+
+#pragma once
+#ifndef version_h_in
+#define version_h_in
+#define ${PROJECT_NAME}_VERSION "${PROJECT_VERSION}"
+#endif	// version_h_in

@@ -1,0 +1,30 @@
+// *****************************************************
+//    Copyright 2022 Videonetics Technology Pvt Ltd
+// *****************************************************
+
+{
+	"Copyright info": {
+		"scope": "cpp,cmake",
+		"prefix": "cp",
+		"body": [
+			"$LINE_COMMENT *****************************************************\n$LINE_COMMENT\tCopyright $CURRENT_YEAR Videonetics Technology Pvt Ltd\n$LINE_COMMENT *****************************************************\n\n"
+		],
+		"description": "Copyright info"
+	},
+	"Header info": {
+		"scope": "cpp",
+		"prefix": "header",
+		"body": [
+			"#pragma once\n#ifndef ${TM_FILENAME/[\\.-]/_/g}\n#define ${TM_FILENAME/[\\.-]/_/g}\n$1\n#endif\t$LINE_COMMENT ${TM_FILENAME/[\\.-]/_/g}\n"
+		],
+		"description": "Header info"
+	},
+	"Include Header": {
+		"scope": "cpp",
+		"prefix": "inh",
+		"body": [
+			"#include \"${TM_FILENAME/(.*)\\..+$/$1/}.h\"\n"
+		],
+		"description": "Header info"
+	}
+}

@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "wmaurer.change-case",
+    "ms-vscode.cpptools",
+    "ms-vscode.cmake-tools",
+    "ms-vscode.cpptools-themes",
+    "esbenp.prettier-vscode"
+  ]
+}
