@@ -36,7 +36,7 @@ add_library(${COMPONENT1}
 )
 
 target_compile_definitions(${COMPONENT1}
-	PUBLIC VTPL_COMPILED_LIB
+	PUBLIC NOMINMAX
 )
 
 # target_sources(${COMPONENT1} PUBLIC FILE_SET HEADERS
