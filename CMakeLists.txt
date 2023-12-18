@@ -12,7 +12,7 @@ project(fpsutil
 	LANGUAGES CXX)
 set(COMPONENT1 fpsutil)
 
-find_package(Poco REQUIRED Util)
+find_package(Poco REQUIRED Foundation)
 find_package(logutil REQUIRED)
 
 
@@ -68,7 +68,7 @@ set_target_properties(
 
 target_link_libraries(${COMPONENT1}
 	PUBLIC logutil::core
-	PUBLIC Poco::Util
+	PUBLIC Poco::Foundation
 )
 
 find_package(Git)
