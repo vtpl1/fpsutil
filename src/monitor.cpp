@@ -11,23 +11,18 @@
 constexpr int max_sleep_upto_sec     = 10;
 constexpr int time_out_in_sec_30_sec = 30;
 
-Status::Status(uint64_t app_id, uint64_t channel_id, uint64_t thread_id) : Status(app_id, channel_id, thread_id, 0, 0)
-{
-}
+Status::Status(uint64_t app_id, uint64_t channel_id, uint64_t thread_id)
+    : Status(app_id, channel_id, thread_id, 0, 0) {}
 
 Status::Status(uint64_t app_id_, uint64_t channel_id_, uint64_t thread_id_, uint64_t value_, uint64_t last_value_)
-    : app_id(app_id_), channel_id(channel_id_), thread_id(thread_id_), value(value_), last_value(last_value_)
-{
-}
+    : app_id(app_id_), channel_id(channel_id_), thread_id(thread_id_), value(value_), last_value(last_value_) {}
 
 Monitor::Monitor(std::string session_dir, std::string file_name)
-    : session_dir_(std::move(session_dir)), file_name_(std::move(file_name))
-{
+    : session_dir_(std::move(session_dir)), file_name_(std::move(file_name)) {
   thread_ = std::make_unique<std::thread>(&Monitor::run_, this);
 }
 
-Monitor::~Monitor()
-{
+Monitor::~Monitor() {
   do_shutdown_ = true;
   if (thread_) {
     if (thread_) {
@@ -44,19 +39,16 @@ Monitor::~Monitor()
 
 Monitor& Monitor::getInstance() { return getInstance("session", "fps_common"); }
 
-Monitor& Monitor::getInstance(std::string session_dir, std::string file_name)
-{
+Monitor& Monitor::getInstance(std::string session_dir, std::string file_name) {
   static Monitor instance(std::move(session_dir), std::move(file_name));
   return instance;
 }
 
-std::atomic_uint_fast64_t& Monitor::set_status(uint64_t app_id, uint64_t channel_id, uint64_t thread_id)
-{
+std::atomic_uint_fast64_t& Monitor::set_status(uint64_t app_id, uint64_t channel_id, uint64_t thread_id) {
   return Monitor::getInstance().set_status_(app_id, channel_id, thread_id);
 }
 
-std::atomic_uint_fast64_t& Monitor::set_status_(uint64_t app_id, uint64_t channel_id, uint64_t thread_id)
-{
+std::atomic_uint_fast64_t& Monitor::set_status_(uint64_t app_id, uint64_t channel_id, uint64_t thread_id) {
   const std::lock_guard<std::mutex> lock(resource_map_mtx_);
 
   auto key = std::tuple<uint64_t, uint64_t, uint64_t>(app_id, channel_id, thread_id);
@@ -71,14 +63,12 @@ std::atomic_uint_fast64_t& Monitor::set_status_(uint64_t app_id, uint64_t channe
   return map.first->second->value;
 }
 
-int64_t get_current_time_in_ms()
-{
+int64_t get_current_time_in_ms() {
   return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())
       .count();
 }
 
-void Monitor::write_header_()
-{
+void Monitor::write_header_() {
   {
     std::stringstream ss_header;
     std::stringstream ss_data;
@@ -112,8 +102,7 @@ void Monitor::write_header_()
   }
 }
 
-void Monitor::write_data_()
-{
+void Monitor::write_data_() {
   int64_t current_ts = get_current_time_in_ms();
   int64_t time_diff  = current_ts - last_write_ts_;
   if (time_diff <= 0) {
@@ -188,8 +177,7 @@ void Monitor::write_data_()
   last_write_ts_ = current_ts;
 }
 
-void Monitor::run_()
-{
+void Monitor::run_() {
   int sleep_upto_sec = max_sleep_upto_sec;
   last_write_ts_     = get_current_time_in_ms();
 

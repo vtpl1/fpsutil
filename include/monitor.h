@@ -28,8 +28,7 @@ struct Status {
   ~Status() = default;
 };
 
-class FPSUTIL_EXPORT Monitor
-{
+class FPSUTIL_EXPORT Monitor {
 private:
   bool             is_already_shutting_down_{false};
   std::atomic_bool do_shutdown_{false};

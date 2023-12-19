@@ -2,7 +2,7 @@
 # We'll use defaults from the LLVM style, but with 4 columns indentation.
 BasedOnStyle: LLVM
 IndentWidth: 2
-BreakBeforeBraces:  Linux
+BreakBeforeBraces:  Attach
 ColumnLimit:        120
 SortIncludes:       true
 AlignConsecutiveMacros: true
