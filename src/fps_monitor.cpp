@@ -81,9 +81,8 @@ void FpsMonitor::write_header_() {
       const std::lock_guard<std::mutex> lock(resource_map_mtx_);
       for (auto&& itr : resource_map_) {
         ss_header << "App .Chn .Thr             Fps|";
-        ss_data << fmt::format("{:04}.{:04}.{:04}            fps|", static_cast<uint64_t>(itr.second->app_id),
-                               static_cast<uint64_t>(itr.second->channel_id),
-                               static_cast<uint64_t>(itr.second->thread_id));
+        ss_data << fmt::format("{:04}.{:04}.{:04}            fps|", itr.second->app_id.load(),
+                               itr.second->channel_id.load(), itr.second->thread_id.load());
       }
     }
 
