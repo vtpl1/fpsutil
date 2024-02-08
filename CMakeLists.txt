@@ -7,14 +7,12 @@ set(VERSION 1.0.9)
 
 project(fpsutil
 	VERSION ${VERSION}
-	DESCRIPTION "A simple wrapper around poco data"
+	DESCRIPTION "A simple wrapper to monitor fps"
 	HOMEPAGE_URL "https://github.com/vtpl1/fpsutil"
 	LANGUAGES CXX)
 set(COMPONENT1 fpsutil)
 
-find_package(Poco REQUIRED Foundation)
 find_package(logutil REQUIRED)
-
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 set(CMAKE_CXX_CLANG_TIDY
@@ -27,18 +25,28 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 
 list(APPEND COMPONENT1_PUBLIC_HEADERS
-	include/monitor.h
+	include/fps_monitor.h
 	${PROJECT_BINARY_DIR}/${COMPONENT1}_export.h
 	${PROJECT_BINARY_DIR}/version.h)
 
 # set(BUILD_SHARED_LIBS TRUE)
 add_library(${COMPONENT1}
-    src/monitor.cpp
+    src/fps_monitor.cpp
 )
 
 target_compile_definitions(${COMPONENT1}
 	PUBLIC NOMINMAX
 )
+
+target_compile_features(${COMPONENT1}
+	PUBLIC cxx_std_17
+)
+
+if (MSVC)
+    target_compile_options(${COMPONENT1}
+        PUBLIC /Zc:__cplusplus
+    )
+endif()
 
 # target_sources(${COMPONENT1} PUBLIC FILE_SET HEADERS
 #   FILES ${COMPONENT1_PUBLIC_HEADERS})
@@ -69,7 +77,6 @@ set_target_properties(
 
 target_link_libraries(${COMPONENT1}
 	PUBLIC logutil::core
-	PUBLIC Poco::Foundation
 )
 
 find_package(Git)
@@ -120,7 +127,6 @@ install(TARGETS ${INSTALL_TARGETS}
 	# ... and the import lib into the devel package
 	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 		COMPONENT			${PROJECT_NAME}_Development
-
 	PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
 		COMPONENT			${PROJECT_NAME}_Development
 )
@@ -180,3 +186,11 @@ install(
 		${COMPONENT1_PUBLIC_HEADERS}
 		# ${PROJECT_BINARY_DIR}/version.h
 	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
+
+add_executable(test
+	src/main.cpp
+)
+
+target_link_libraries(test
+	PRIVATE ${COMPONENT1}
+)

@@ -73,7 +73,13 @@
         "execution": "cpp",
         "ios": "cpp",
         "locale": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "iostream": "cpp",
+        "charconv": "cpp",
+        "sstream": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "print": "cpp"
     },
 
 }

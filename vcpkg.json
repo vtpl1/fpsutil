@@ -5,7 +5,6 @@
   "homepage": "http://github.com/fpsutil",
   "builtin-baseline": "e85b5bb95a14ff7e014601e88a8dc2fea6798e33",
   "dependencies": [
-    "logutil",
-    "poco"
+    "logutil"
   ]
 }

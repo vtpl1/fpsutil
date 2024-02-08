@@ -2,7 +2,6 @@
 
 include(CMakeFindDependencyMacro)
 
-find_dependency(Poco REQUIRED Foundation)
 find_dependency(logutil REQUIRED)
 
 include(${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@-targets.cmake)
