@@ -21,10 +21,10 @@
 
 constexpr int32_t LOG_INTERVAL_SEC = 10;
 
-Status::Status(uint64_t app_id, uint64_t channel_id, uint64_t thread_id)
-    : Status(app_id, channel_id, thread_id, 0, 0) {}
+FpsStatus::FpsStatus(uint64_t app_id, uint64_t channel_id, uint64_t thread_id)
+    : FpsStatus(app_id, channel_id, thread_id, 0, 0) {}
 
-Status::Status(uint64_t app_id_, uint64_t channel_id_, uint64_t thread_id_, uint64_t value_, uint64_t last_value_)
+FpsStatus::FpsStatus(uint64_t app_id_, uint64_t channel_id_, uint64_t thread_id_, uint64_t value_, uint64_t last_value_)
     : app_id(app_id_), channel_id(channel_id_), thread_id(thread_id_), value(value_), last_value(last_value_) {}
 
 FpsMonitor::FpsMonitor(std::string session_dir, std::string file_name)
@@ -68,7 +68,7 @@ auto FpsMonitor::set_status_(uint64_t app_id, uint64_t channel_id, uint64_t thre
     return itr->second->value;
   }
 
-  auto map = resource_map_.emplace(key, std::move(std::make_unique<Status>(app_id, channel_id, thread_id)));
+  auto map = resource_map_.emplace(key, std::move(std::make_unique<FpsStatus>(app_id, channel_id, thread_id)));
   return map.first->second->value;
 }
 

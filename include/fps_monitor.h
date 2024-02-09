@@ -16,16 +16,16 @@
 
 #include <fpsutil_export.h>
 
-struct Status {
+struct FpsStatus {
   std::atomic_uint_fast64_t app_id{0};
   std::atomic_uint_fast64_t channel_id{0};
   std::atomic_uint_fast64_t thread_id{0};
   std::atomic_uint_fast64_t value{0};
   std::atomic_uint_fast64_t last_value{0};
 
-  Status(uint64_t app_id, uint64_t channel_id, uint64_t thread_id);
-  Status(uint64_t app_id, uint64_t channel_id, uint64_t thread_id, uint64_t value, uint64_t last_value);
-  ~Status() = default;
+  FpsStatus(uint64_t app_id, uint64_t channel_id, uint64_t thread_id);
+  FpsStatus(uint64_t app_id, uint64_t channel_id, uint64_t thread_id, uint64_t value, uint64_t last_value);
+  ~FpsStatus() = default;
 };
 
 class FPSUTIL_EXPORT FpsMonitor {
@@ -43,7 +43,7 @@ private:
 
   std::mutex resource_map_mtx_;
 
-  std::map<std::tuple<uint64_t, uint64_t, uint64_t>, std::unique_ptr<Status>> resource_map_;
+  std::map<std::tuple<uint64_t, uint64_t, uint64_t>, std::unique_ptr<FpsStatus>> resource_map_;
 
   int64_t last_write_ts_;
   bool    do_write_header_{false};
