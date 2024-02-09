@@ -3,7 +3,7 @@
 # *****************************************************
 cmake_minimum_required(VERSION 3.15)
 
-set(VERSION 1.0.11)
+set(VERSION 1.0.12)
 
 project(fpsutil
 	VERSION ${VERSION}
