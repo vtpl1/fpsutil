@@ -1,15 +1,15 @@
 ---
 Checks:          'clang-diagnostic-*,
                   clang-analyzer-*,
+                  clang-diagnostic-*,
+                  clang-analyzer-*,
                   bugprone-*,
                   modernize-*,
                   performance-*,
                   readability-*,
                   cppcoreguidelines-*,
                   misc-*,
-                  -cppcoreguidelines-avoid-magic-numbers,
-                  -readability-magic-numbers,
-                  -bugprone-easily-swappable-parameters'
+                  -modernize-use-trailing-return-type'
 WarningsAsErrors: ''
 HeaderFileExtensions:
   - ''
@@ -175,7 +175,7 @@ CheckOptions:
   misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic: 'false'
   misc-non-private-member-variables-in-classes.IgnorePublicMemberVariables: 'false'
   misc-throw-by-value-catch-by-reference.CheckThrowTemporaries: 'true'
-  misc-throw-by-value-catch-by-reference.MaxSize: '-1'
+  misc-throw-by-value-catch-by-reference.MaxSize: '1'
   misc-throw-by-value-catch-by-reference.WarnOnLargeObjects: 'false'
   misc-uniqueptr-reset-release.IncludeStyle: llvm
   misc-unused-parameters.IgnoreVirtual: 'false'
@@ -270,7 +270,7 @@ CheckOptions:
   readability-else-after-return.WarnOnConditionVariables: 'true'
   readability-else-after-return.WarnOnUnfixable: 'true'
   readability-function-cognitive-complexity.DescribeBasicIncrements: 'true'
-  readability-function-cognitive-complexity.IgnoreMacros: 'true'
+  readability-function-cognitive-complexity.IgnoreMacros: 'false'
   readability-function-cognitive-complexity.Threshold: '25'
   readability-function-size.BranchThreshold: none
   readability-function-size.LineThreshold: none
@@ -291,6 +291,15 @@ CheckOptions:
   readability-identifier-naming.GetConfigPerFile: 'true'
   readability-identifier-naming.IgnoreFailedSplit: 'false'
   readability-identifier-naming.IgnoreMainLikeFunctions: 'false'
+  readability-identifier-naming.FunctionCase: 'camelBack'
+  readability-identifier-naming.MemberCase: 'camelBack'
+  readability-identifier-naming.PrivateMemberCase: 'lower_case'
+  readability-identifier-naming.PrivateMemberSuffix: '_'
+  readability-identifier-naming.PrivateMemberHungarianPrefix: 'On'
+  readability-identifier-naming.ParameterCase: 'lower_case'
+  readability-identifier-naming.VariableCase: 'lower_case'
+  readability-identifier-naming.PointerParameterCase: 'lower_case'
+  readability-identifier-naming.ConstexprVariableCase: 'UPPER_CASE'
   readability-implicit-bool-conversion.AllowIntegerConditions: 'false'
   readability-implicit-bool-conversion.AllowPointerConditions: 'false'
   readability-inconsistent-declaration-parameter-name.IgnoreMacros: 'true'
