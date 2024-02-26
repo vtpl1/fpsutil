@@ -3,7 +3,7 @@
   "version": "1.0.12",
   "description": "Fps util",
   "homepage": "http://github.com/fpsutil",
-  "builtin-baseline": "e85b5bb95a14ff7e014601e88a8dc2fea6798e33",
+  "builtin-baseline": "c8696863d371ab7f46e213d8f5ca923c4aef2a00",
   "dependencies": [
     "logutil"
   ]

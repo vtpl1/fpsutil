@@ -17,14 +17,17 @@
 #include <fpsutil_export.h>
 
 struct FpsStatus {
-  std::atomic_uint_fast64_t app_id{0};
-  std::atomic_uint_fast64_t channel_id{0};
-  std::atomic_uint_fast64_t thread_id{0};
-  std::atomic_uint_fast64_t value{0};
-  std::atomic_uint_fast64_t last_value{0};
+  std::atomic_uint_fast64_t app_id;
+  std::atomic_uint_fast64_t channel_id;
+  std::atomic_uint_fast64_t thread_id;
+  std::atomic_uint_fast64_t value;
+  std::atomic_uint_fast64_t last_value;
+  std::atomic_bool          dump_in_log;
+  std::atomic<float>        last_fps{0.0};
 
-  FpsStatus(uint64_t app_id, uint64_t channel_id, uint64_t thread_id);
-  FpsStatus(uint64_t app_id, uint64_t channel_id, uint64_t thread_id, uint64_t value, uint64_t last_value);
+  FpsStatus(uint64_t app_id, uint64_t channel_id, uint64_t thread_id, bool dump_in_log);
+  FpsStatus(uint64_t app_id, uint64_t channel_id, uint64_t thread_id, uint64_t value, uint64_t last_value,
+            bool dump_in_log);
   ~FpsStatus() = default;
 };
 
@@ -48,7 +51,9 @@ private:
   int64_t last_write_ts_;
   bool    do_write_header_{false};
 
-  std::atomic_uint_fast64_t& set_status_(uint64_t app_id, uint64_t channel_id, uint64_t thread_id);
+  std::atomic_uint_fast64_t& set_status_(uint64_t app_id, uint64_t channel_id, uint64_t thread_id, bool dump_in_log);
+  float                      get_fps_(uint64_t app_id, uint64_t channel_id, uint64_t thread_id);
+  void                       calculate_fps_();
 
   void write_data_();
   void write_header_();
@@ -60,7 +65,9 @@ private:
 public:
   static FpsMonitor&                getInstance();
   static FpsMonitor&                getInstance(std::string session_dir, std::string file_name);
-  static std::atomic_uint_fast64_t& set_status(uint64_t app_id, uint64_t channel_id, uint64_t thread_id);
+  static std::atomic_uint_fast64_t& set_status(uint64_t app_id, uint64_t channel_id, uint64_t thread_id,
+                                               bool dump_in_log = true);
+  static float                      get_fps(uint64_t app_id, uint64_t channel_id, uint64_t thread_id);
 };
 
 #endif // fps_monitor_h

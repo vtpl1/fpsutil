@@ -3,9 +3,10 @@
     {
       "kind": "git",
       "repository": "https://github.com/vtpl1/vcpkg_registry",
-      "baseline": "912fbf6f49570d4e4468382ac1281d0c60d5a8b9",
+      "baseline": "f5cb28a424c1ce2f562a2d7f997e9832ed5c181a",
       "packages": [
-        "logutil"
+        "logutil",
+        "fileutil"
       ]
     }
   ]

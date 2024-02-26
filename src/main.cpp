@@ -11,6 +11,7 @@
 #include <vector>
 
 void run(std::atomic_uint_fast64_t& monitor_set_status, int millis) {
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
   int limit = 30000000;
   while (limit-- > 0) {
     monitor_set_status++;
@@ -28,13 +29,19 @@ auto main(int /*argc*/, char const* /*argv*/[]) -> int {
 
   for (int i = 1; i <= (3 * thread_per_group); i++) {
     if (i <= thread_per_group) {
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
       threads.emplace_back(run, std::ref(FpsMonitor::set_status(0, i, 0)), 200);
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
       threads.emplace_back(run, std::ref(FpsMonitor::set_status(0, i, 1)), 100);
     } else if (i > thread_per_group && i <= (2 * thread_per_group)) {
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
       threads.emplace_back(run, std::ref(FpsMonitor::set_status(0, i, 0)), 50);
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
       threads.emplace_back(run, std::ref(FpsMonitor::set_status(0, i, 1)), 40);
     } else if (i > (2 * thread_per_group) && i <= (3 * thread_per_group)) {
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
       threads.emplace_back(run, std::ref(FpsMonitor::set_status(0, i, 0)), 25);
+      // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
       threads.emplace_back(run, std::ref(FpsMonitor::set_status(0, i, 1)), 20);
     }
   }
