@@ -16,6 +16,12 @@
 
 #include <fpsutil_export.h>
 
+struct UniqueId {
+  uint64_t app_id;
+  uint64_t channel_id;
+  uint64_t thread_id;
+};
+
 struct FpsStatus {
   std::atomic_uint_fast64_t app_id;
   std::atomic_uint_fast64_t channel_id;
@@ -48,6 +54,9 @@ private:
 
   std::map<std::tuple<uint64_t, uint64_t, uint64_t>, std::unique_ptr<FpsStatus>> resource_map_;
 
+  std::mutex                      unique_key_map_mtx_;
+  std::map<std::string, UniqueId> unique_key_map_;
+
   int64_t last_write_ts_;
   bool    do_write_header_{false};
 
@@ -59,6 +68,9 @@ private:
   void write_header_();
   void run_();
 
+  UniqueId giveMyUniqueId(std::string ip);
+  void     removeMyUniqueId(UniqueId unique_id);
+
   FpsMonitor(std::string session_dir, std::string file_name);
   ~FpsMonitor();
 
@@ -68,6 +80,8 @@ public:
   static std::atomic_uint_fast64_t& set_status(uint64_t app_id, uint64_t channel_id, uint64_t thread_id,
                                                bool dump_in_log = true);
   static float                      get_fps(uint64_t app_id, uint64_t channel_id, uint64_t thread_id);
+  static UniqueId                   giveMyUniqueId(std::string ip);
+  static void                       removeMyUniqueId(UniqueId unique_id);
 };
 
 #endif // fps_monitor_h

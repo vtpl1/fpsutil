@@ -258,3 +258,32 @@ float FpsMonitor::get_fps_(uint64_t app_id, uint64_t channel_id, uint64_t thread
 float FpsMonitor::get_fps(uint64_t app_id, uint64_t channel_id, uint64_t thread_id) {
   return FpsMonitor::getInstance().get_fps_(app_id, channel_id, thread_id);
 }
+
+UniqueId FpsMonitor::giveMyUniqueId(std::string ip) {
+  const std::lock_guard<std::mutex> lock(unique_key_map_mtx_);
+
+  // auto key = std::tuple<uint64_t, uint64_t, uint64_t>(app_id, channel_id, thread_id);
+  auto itr = unique_key_map_.find(ip);
+  if (itr != unique_key_map_.end()) {
+    itr->second.thread_id itr->second->value++;
+    return itr->second->value;
+  }
+
+  auto map =
+      resource_map_.emplace(key, std::move(std::make_unique<FpsStatus>(app_id, channel_id, thread_id, dump_in_log)));
+  return map.first->second->value;
+}
+void FpsMonitor::removeMyUniqueId(UniqueId unique_id) {
+  const std::lock_guard<std::mutex> lock(unique_key_map_mtx_);
+
+  // auto key = std::tuple<uint64_t, uint64_t, uint64_t>(app_id, channel_id, thread_id);
+  // auto itr = resource_map_.find(key);
+  // if (itr != resource_map_.end()) {
+  //   itr->second->value++;
+  //   return itr->second->value;
+  // }
+
+  // auto map =
+  //     resource_map_.emplace(key, std::move(std::make_unique<FpsStatus>(app_id, channel_id, thread_id, dump_in_log)));
+  // return map.first->second->value;
+}
