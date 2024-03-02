@@ -19,7 +19,7 @@ void run(std::atomic_uint_fast64_t& monitor_set_status, int millis) {
   }
 }
 
-auto main(int /*argc*/, char const* /*argv*/[]) -> int {
+auto main1(int /*argc*/, char const* /*argv*/[]) -> int {
   std::cout << "Started\n";
 
   FpsMonitor::getInstance();
@@ -53,5 +53,22 @@ auto main(int /*argc*/, char const* /*argv*/[]) -> int {
   }
   std::cout << "Stopped\n";
 
+  return 0;
+}
+
+auto main(int /*argc*/, char const* /*argv*/[]) -> int {
+  std::cout << "Hello World\n";
+  FpsMonitor::getInstance("session", "fps_test");
+
+  auto a = FpsMonitor::giveMyUniqueId("rtsp://1");
+  auto b = FpsMonitor::giveMyUniqueId("rtsp://2");
+  auto c = FpsMonitor::giveMyUniqueId("rtsp://1");
+  std::cout << "a: " << a.to_string() << '\n';
+  std::cout << "b: " << b.to_string() << '\n';
+  std::cout << "c: " << c.to_string() << '\n';
+  FpsMonitor::removeMyUniqueId(a);
+  FpsMonitor::removeMyUniqueId(c);
+  auto d = FpsMonitor::giveMyUniqueId("rtsp://1");
+  assert(d == a);
   return 0;
 }

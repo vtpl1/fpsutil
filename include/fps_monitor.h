@@ -17,11 +17,15 @@
 #include <fpsutil_export.h>
 
 struct UniqueId {
-  uint64_t app_id;
-  uint64_t channel_id;
-  uint64_t thread_id;
+  uint64_t    app_id{0};
+  uint64_t    channel_id{0};
+  uint64_t    thread_id{0};
+  bool        place_holder{false};
+  std::string to_string() const;
 };
-
+inline bool operator==(const UniqueId& lhs, const UniqueId& rhs) {
+  return lhs.app_id == rhs.app_id && lhs.channel_id == rhs.app_id && lhs.thread_id == rhs.thread_id;
+}
 struct FpsStatus {
   std::atomic_uint_fast64_t app_id;
   std::atomic_uint_fast64_t channel_id;
@@ -55,7 +59,8 @@ private:
   std::map<std::tuple<uint64_t, uint64_t, uint64_t>, std::unique_ptr<FpsStatus>> resource_map_;
 
   std::mutex                      unique_key_map_mtx_;
-  std::map<std::string, UniqueId> unique_key_map_;
+  uint64_t                        unique_channel_id_generator_;
+  std::map<std::string, UniqueId> unique_key_secondary_id_map_;
 
   int64_t last_write_ts_;
   bool    do_write_header_{false};
@@ -68,8 +73,8 @@ private:
   void write_header_();
   void run_();
 
-  UniqueId giveMyUniqueId(std::string ip);
-  void     removeMyUniqueId(UniqueId unique_id);
+  UniqueId giveMyUniqueId_(std::string ip);
+  void     removeMyUniqueId_(UniqueId unique_id);
 
   FpsMonitor(std::string session_dir, std::string file_name);
   ~FpsMonitor();

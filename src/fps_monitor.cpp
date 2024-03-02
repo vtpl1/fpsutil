@@ -87,6 +87,20 @@ auto FpsMonitor::set_status_(uint64_t app_id, uint64_t channel_id, uint64_t thre
 }
 
 void FpsMonitor::write_header_() {
+
+  {
+    std::stringstream                 ss_header;
+    std::stringstream                 ss_data;
+    const std::lock_guard<std::mutex> lock(unique_key_map_mtx_);
+    auto                              count = 0;
+    for (auto&& itr : unique_key_secondary_id_map_) {
+      if (!itr.second.place_holder) {
+        if (itr.second.thread_id) {
+        }
+        ss_data << fmt::format("{:03}|", count++);
+      }
+    }
+  }
   {
     std::stringstream ss_header;
     std::stringstream ss_data;
@@ -259,31 +273,49 @@ float FpsMonitor::get_fps(uint64_t app_id, uint64_t channel_id, uint64_t thread_
   return FpsMonitor::getInstance().get_fps_(app_id, channel_id, thread_id);
 }
 
-UniqueId FpsMonitor::giveMyUniqueId(std::string ip) {
+UniqueId FpsMonitor::giveMyUniqueId_(std::string key) {
   const std::lock_guard<std::mutex> lock(unique_key_map_mtx_);
-
-  // auto key = std::tuple<uint64_t, uint64_t, uint64_t>(app_id, channel_id, thread_id);
-  auto itr = unique_key_map_.find(ip);
-  if (itr != unique_key_map_.end()) {
-    itr->second.thread_id itr->second->value++;
-    return itr->second->value;
+  auto                              itr = unique_key_secondary_id_map_.find(key);
+  if (itr != unique_key_secondary_id_map_.end()) {
+    if (itr->second.place_holder) {
+      itr->second.thread_id = 0;
+    } else {
+      itr->second.thread_id++;
+    }
+    return UniqueId{itr->second.app_id, itr->second.channel_id, itr->second.thread_id};
   }
-
-  auto map =
-      resource_map_.emplace(key, std::move(std::make_unique<FpsStatus>(app_id, channel_id, thread_id, dump_in_log)));
-  return map.first->second->value;
+  auto unique_id = UniqueId{0, unique_channel_id_generator_++, 0};
+  unique_key_secondary_id_map_.emplace(std::pair<std::string, UniqueId>(key, unique_id));
+  return unique_id;
 }
-void FpsMonitor::removeMyUniqueId(UniqueId unique_id) {
+void FpsMonitor::removeMyUniqueId_(UniqueId unique_id) {
   const std::lock_guard<std::mutex> lock(unique_key_map_mtx_);
 
-  // auto key = std::tuple<uint64_t, uint64_t, uint64_t>(app_id, channel_id, thread_id);
-  // auto itr = resource_map_.find(key);
-  // if (itr != resource_map_.end()) {
-  //   itr->second->value++;
-  //   return itr->second->value;
-  // }
+  std::string key;
+  for (auto& unique_key_secondary_id : unique_key_secondary_id_map_) {
+    if (unique_key_secondary_id.second.app_id == unique_id.app_id) {
+      if (unique_key_secondary_id.second.channel_id == unique_id.channel_id) {
+        // match found
 
-  // auto map =
-  //     resource_map_.emplace(key, std::move(std::make_unique<FpsStatus>(app_id, channel_id, thread_id, dump_in_log)));
-  // return map.first->second->value;
+        if (unique_key_secondary_id.second.thread_id > 0) {
+          unique_key_secondary_id.second.thread_id--;
+        } else {
+          unique_key_secondary_id.second.place_holder = true;
+        }
+        break;
+      }
+    }
+  }
+  // if (!key.empty()) {
+  //   unique_key_secondary_id_map_.erase(key);
+  // }
+}
+
+UniqueId FpsMonitor::giveMyUniqueId(std::string ip) { return FpsMonitor::getInstance().giveMyUniqueId_(ip); }
+void     FpsMonitor::removeMyUniqueId(UniqueId unique_id) { FpsMonitor::getInstance().removeMyUniqueId_(unique_id); }
+
+std::string UniqueId::to_string() const {
+  std::stringstream ss;
+  ss << "app_id: " << app_id << " channel_id: " << channel_id << " thread_id: " << thread_id;
+  return ss.str();
 }
