@@ -12,6 +12,8 @@ project(fpsutil
 	LANGUAGES CXX)
 set(COMPONENT1 fpsutil)
 
+find_package(spdlog REQUIRED)
+find_package(fmt REQUIRED)
 find_package(logutil REQUIRED)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -76,7 +78,9 @@ set_target_properties(
 		VERSION ${PROJECT_VERSION})
 
 target_link_libraries(${COMPONENT1}
-	PUBLIC logutil::core
+	PUBLIC spdlog::spdlog
+	PRIVATE fmt::fmt
+	PRIVATE logutil::core
 )
 
 find_package(Git)

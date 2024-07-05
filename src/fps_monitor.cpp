@@ -12,6 +12,7 @@
 #include <logging.h>
 #include <memory>
 #include <mutex>
+#include <spdlog/spdlog.h>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -65,13 +66,13 @@ auto FpsMonitor::getInstance(std::string session_dir, std::string file_name) -> 
   return instance;
 }
 
-auto FpsMonitor::set_status(uint64_t app_id, uint64_t channel_id, uint64_t thread_id, bool dump_in_log)
-    -> std::atomic_uint_fast64_t& {
+auto FpsMonitor::set_status(uint64_t app_id, uint64_t channel_id, uint64_t thread_id,
+                            bool dump_in_log) -> std::atomic_uint_fast64_t& {
   return FpsMonitor::getInstance().set_status_(app_id, channel_id, thread_id, dump_in_log);
 }
 
-auto FpsMonitor::set_status_(uint64_t app_id, uint64_t channel_id, uint64_t thread_id, bool dump_in_log)
-    -> std::atomic_uint_fast64_t& {
+auto FpsMonitor::set_status_(uint64_t app_id, uint64_t channel_id, uint64_t thread_id,
+                             bool dump_in_log) -> std::atomic_uint_fast64_t& {
   const std::lock_guard<std::mutex> lock(resource_map_mtx_);
 
   auto key = std::tuple<uint64_t, uint64_t, uint64_t>(app_id, channel_id, thread_id);

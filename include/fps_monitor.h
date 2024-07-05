@@ -7,10 +7,10 @@
 #define fps_monitor_h
 
 #include <atomic>
-#include <logging.h>
 #include <map>
 #include <memory>
 #include <mutex>
+#include <spdlog/spdlog.h>
 #include <string>
 #include <thread>
 
