@@ -25,8 +25,8 @@ static_assert(__cplusplus >= 201703L, "This file expects a C++17 compatible comp
 
 constexpr int32_t LOG_INTERVAL_SEC         = 10;
 constexpr int32_t MAX_VALID_LIST_SIZE      = 100;
-constexpr int32_t MIN_ABNORMAL_FPS         = 10;
-constexpr int32_t MAX_ABNORMAL_FPS         = 40;
+constexpr int32_t MIN_ABNORMAL_FPS         = 8;
+constexpr int32_t MAX_ABNORMAL_FPS         = 1000;
 constexpr float   MILLI_SECONDS_IN_SECONDS = 1000.0F;
 constexpr int32_t STRFTIME_FORMAT_LENGTH   = 20;
 
@@ -44,7 +44,7 @@ FpsMonitor::FpsMonitor(std::string session_dir, std::string file_name)
   thread_ = std::make_unique<std::thread>(&FpsMonitor::run_, this);
 }
 
-FpsMonitor::~FpsMonitor() {
+void FpsMonitor::shutDown() {
   do_shutdown_ = true;
   if (thread_) {
     if (thread_) {
@@ -58,27 +58,30 @@ FpsMonitor::~FpsMonitor() {
     itr.second = nullptr;
   }
 }
+FpsMonitor::~FpsMonitor() { shutDown(); }
 
 auto FpsMonitor::getInstance() -> FpsMonitor& { return getInstance("session", "fps_common"); }
+auto FpsMonitor::close() -> void { getInstance().shutDown(); }
 
 auto FpsMonitor::getInstance(std::string session_dir, std::string file_name) -> FpsMonitor& {
   static FpsMonitor instance(std::move(session_dir), std::move(file_name));
   return instance;
 }
 
-auto FpsMonitor::set_status(uint64_t app_id, uint64_t channel_id, uint64_t thread_id,
-                            bool dump_in_log) -> std::atomic_uint_fast64_t& {
+auto FpsMonitor::set_status(uint64_t app_id, uint64_t channel_id, uint64_t thread_id, bool dump_in_log)
+    -> std::atomic_uint_fast64_t& {
   return FpsMonitor::getInstance().set_status_(app_id, channel_id, thread_id, dump_in_log);
 }
 
-auto FpsMonitor::set_status_(uint64_t app_id, uint64_t channel_id, uint64_t thread_id,
-                             bool dump_in_log) -> std::atomic_uint_fast64_t& {
+auto FpsMonitor::set_status_(uint64_t app_id, uint64_t channel_id, uint64_t thread_id, bool dump_in_log)
+    -> std::atomic_uint_fast64_t& {
   const std::lock_guard<std::mutex> lock(resource_map_mtx_);
 
   auto key = std::tuple<uint64_t, uint64_t, uint64_t>(app_id, channel_id, thread_id);
   auto itr = resource_map_.find(key);
   if (itr != resource_map_.end()) {
     itr->second->value++;
+    itr->second->dump_in_log = dump_in_log;
     return itr->second->value;
   }
 
@@ -88,30 +91,23 @@ auto FpsMonitor::set_status_(uint64_t app_id, uint64_t channel_id, uint64_t thre
 }
 
 void FpsMonitor::write_header_() {
-
-  {
-    std::stringstream                 ss_header;
-    std::stringstream                 ss_data;
-    const std::lock_guard<std::mutex> lock(unique_key_map_mtx_);
-    auto                              count = 0;
-    // for (auto&& itr : unique_key_secondary_id_map_) {
-    //   if (!itr.second.place_holder) {
-    //     if (itr.second.thread_id) {
-    //     }
-    //     ss_data << fmt::format("{:03}|", count++);
-    //   }
-    // }
-  }
   {
     std::stringstream ss_header;
     std::stringstream ss_data;
+    const std::time_t time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+
+    char time_buf[STRFTIME_FORMAT_LENGTH]; // NOLINT
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
+    strftime(time_buf, STRFTIME_FORMAT_LENGTH, "%y-%m-%d", localtime(&time));
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
+    std::string const current_time(time_buf);
 
     {
       const std::lock_guard<std::mutex> lock(resource_map_mtx_);
       for (auto&& itr : resource_map_) {
         if (itr.second->dump_in_log) {
-          ss_header << "App .Chn .Thr             Fps|";
-          ss_data << fmt::format("{:04}.{:04}.{:04}            fps|", itr.second->app_id.load(),
+          ss_header << "Time     App .Chn .Thr        Fps|";
+          ss_data << fmt::format("{} {:04}.{:04}.{:04}       fps|", current_time, itr.second->app_id.load(),
                                  itr.second->channel_id.load(), itr.second->thread_id.load());
         }
       }
@@ -169,7 +165,7 @@ void FpsMonitor::write_data_() {
 
   char time_buf[STRFTIME_FORMAT_LENGTH]; // NOLINT
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
-  strftime(time_buf, STRFTIME_FORMAT_LENGTH, "%Y-%m-%d %H:%M:%S", localtime(&time));
+  strftime(time_buf, STRFTIME_FORMAT_LENGTH, "%H:%M:%S", localtime(&time));
   // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-array-to-pointer-decay)
   std::string const current_time(time_buf);
 
@@ -180,8 +176,12 @@ void FpsMonitor::write_data_() {
       for (auto&& itr : resource_map_) {
         if (itr.second->dump_in_log) {
 
-          auto fps = itr.second->last_fps.load();
-          ss_data << fmt::format("{} {:>9.{}f}|", current_time, fps, 1);
+          auto fps        = itr.second->last_fps.load();
+          auto app_id     = itr.second->app_id.load();
+          auto channel_id = itr.second->channel_id.load();
+          auto thread_id  = itr.second->thread_id.load();
+          ss_data << fmt::format("{} {:04}.{:04}.{:04} {:>9.{}f}|", current_time, app_id, channel_id, thread_id, fps,
+                                 1);
 
           if (MIN_ABNORMAL_FPS <= fps && MAX_ABNORMAL_FPS >= fps) {
             valid_list.emplace_back(itr.first);
@@ -259,7 +259,7 @@ void FpsMonitor::run_() {
   write_data_();
 }
 
-float FpsMonitor::get_fps_(uint64_t app_id, uint64_t channel_id, uint64_t thread_id) {
+std::atomic<float>& FpsMonitor::get_fps_(uint64_t app_id, uint64_t channel_id, uint64_t thread_id) {
   const std::lock_guard<std::mutex> lock(resource_map_mtx_);
 
   auto key = std::tuple<uint64_t, uint64_t, uint64_t>(app_id, channel_id, thread_id);
@@ -267,56 +267,10 @@ float FpsMonitor::get_fps_(uint64_t app_id, uint64_t channel_id, uint64_t thread
   if (itr != resource_map_.end()) {
     return itr->second->last_fps;
   }
-  return 0.0F;
+  auto map = resource_map_.emplace(key, std::move(std::make_unique<FpsStatus>(app_id, channel_id, thread_id, false)));
+  return map.first->second->last_fps;
 }
 
-float FpsMonitor::get_fps(uint64_t app_id, uint64_t channel_id, uint64_t thread_id) {
+std::atomic<float>& FpsMonitor::get_fps(uint64_t app_id, uint64_t channel_id, uint64_t thread_id) {
   return FpsMonitor::getInstance().get_fps_(app_id, channel_id, thread_id);
 }
-
-// UniqueId FpsMonitor::giveMyUniqueId_(std::string key) {
-//   const std::lock_guard<std::mutex> lock(unique_key_map_mtx_);
-//   auto                              itr = unique_key_secondary_id_map_.find(key);
-//   if (itr != unique_key_secondary_id_map_.end()) {
-//     if (itr->second.place_holder) {
-//       itr->second.thread_id = 0;
-//     } else {
-//       itr->second.thread_id++;
-//     }
-//     return UniqueId{itr->second.app_id, itr->second.channel_id, itr->second.thread_id};
-//   }
-//   auto unique_id = UniqueId{0, unique_channel_id_generator_++, 0};
-//   unique_key_secondary_id_map_.emplace(std::pair<std::string, UniqueId>(key, unique_id));
-//   return unique_id;
-// }
-// void FpsMonitor::removeMyUniqueId_(UniqueId unique_id) {
-//   const std::lock_guard<std::mutex> lock(unique_key_map_mtx_);
-
-//   std::string key;
-//   for (auto& unique_key_secondary_id : unique_key_secondary_id_map_) {
-//     if (unique_key_secondary_id.second.app_id == unique_id.app_id) {
-//       if (unique_key_secondary_id.second.channel_id == unique_id.channel_id) {
-//         // match found
-
-//         if (unique_key_secondary_id.second.thread_id > 0) {
-//           unique_key_secondary_id.second.thread_id--;
-//         } else {
-//           unique_key_secondary_id.second.place_holder = true;
-//         }
-//         break;
-//       }
-//     }
-//   }
-//   // if (!key.empty()) {
-//   //   unique_key_secondary_id_map_.erase(key);
-//   // }
-// }
-
-// UniqueId FpsMonitor::giveMyUniqueId(std::string ip) { return FpsMonitor::getInstance().giveMyUniqueId_(ip); }
-// void     FpsMonitor::removeMyUniqueId(UniqueId unique_id) { FpsMonitor::getInstance().removeMyUniqueId_(unique_id); }
-
-// std::string UniqueId::to_string() const {
-//   std::stringstream ss;
-//   ss << "app_id: " << app_id << " channel_id: " << channel_id << " thread_id: " << thread_id;
-//   return ss.str();
-// }
