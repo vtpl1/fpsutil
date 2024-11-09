@@ -27,6 +27,7 @@ set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 
 list(APPEND COMPONENT1_PUBLIC_HEADERS
+	include/fps_counter.h
 	include/fps_monitor.h
 	${PROJECT_BINARY_DIR}/${COMPONENT1}_export.h
 	${PROJECT_BINARY_DIR}/version.h)
@@ -34,6 +35,7 @@ list(APPEND COMPONENT1_PUBLIC_HEADERS
 # set(BUILD_SHARED_LIBS TRUE)
 add_library(${COMPONENT1}
     src/fps_monitor.cpp
+	src/fps_counter.cpp
 )
 
 target_compile_definitions(${COMPONENT1}

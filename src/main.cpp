@@ -2,6 +2,7 @@
 //    Copyright 2023 Videonetics Technology Pvt Ltd
 // *****************************************************
 
+#include "fps_counter.h"
 #include "fps_monitor.h"
 #include <atomic>
 #include <chrono>
@@ -19,7 +20,7 @@ void run(std::atomic_uint_fast64_t& monitor_set_status, int millis) {
   }
 }
 
-auto main(int /*argc*/, char const* /*argv*/[]) -> int {
+auto main3(int /*argc*/, char const* /*argv*/[]) -> int {
   std::cout << "Started\n";
 
   FpsMonitor::getInstance();
@@ -61,5 +62,21 @@ auto main2(int /*argc*/, char const* /*argv*/[]) -> int {
   FpsMonitor::getInstance("session", "fps_test");
 
   FpsMonitor::close();
+  return 0;
+}
+
+auto main(int /*argc*/, char const* /*argv*/[]) -> int {
+  std::cout << "Hello World\n";
+  int        count = 100;
+  // int64_t    ts    = 0;
+  FpsCounter fps_counter;
+  while (count--) {
+    fps_counter.set_status(1024);
+    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::cout << "FPS: " << fps_counter.get_fps() << std::endl;
+    // ts += 1000;
+  }
+  std::cout << "FPS1: " << fps_counter.get_fps() << std::endl;
+
   return 0;
 }
