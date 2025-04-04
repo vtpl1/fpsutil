@@ -8,10 +8,12 @@
 #include <chrono>
 #include <cstdint>
 #include <ctime>
+#include <fmt/chrono.h>
 #include <fmt/core.h>
-#include <logging.h>
+// #include <logging.h>
 #include <memory>
 #include <mutex>
+#include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/spdlog.h>
 #include <sstream>
 #include <string>
@@ -29,6 +31,90 @@ constexpr int32_t MIN_ABNORMAL_FPS         = 8;
 constexpr int32_t MAX_ABNORMAL_FPS         = 1000;
 constexpr float   MILLI_SECONDS_IN_SECONDS = 1000.0F;
 constexpr int32_t STRFTIME_FORMAT_LENGTH   = 20;
+namespace {
+constexpr int max_size      = 1048576 * 5;
+constexpr int max_files     = 3;
+constexpr int banner_spaces = 80;
+std::string   get_current_time_str() {
+  const std::time_t t = std::time(nullptr);
+  std::stringstream ss;
+  ss << fmt::format("UTC: {:%Y-%m-%d %H:%M:%S}", fmt::gmtime(t));
+  return ss.str();
+}
+std::string printable_current_time() {
+  return fmt::format("\n┌{0:─^{2}}┐\n"
+                     "│{1: ^{2}}│\n"
+                     "└{0:─^{2}}┘\n",
+                     "", get_current_time_str(), banner_spaces);
+}
+
+void write_header(std::shared_ptr<spdlog::logger> logger, const std::string& header_msg) {
+  if (logger) {
+    logger->info(printable_current_time());
+    logger->info(header_msg);
+  }
+}
+void write_log(std::shared_ptr<spdlog::logger> logger, const std::string& log_msg) {
+  if (logger) {
+    logger->info(log_msg);
+    logger->flush();
+  }
+}
+std::shared_ptr<spdlog::logger> get_logger_st_internal(const std::string& logger_name, const std::string& logger_path) {
+  std::shared_ptr<spdlog::logger> logger = spdlog::get(logger_name);
+  if (logger == nullptr) {
+    logger = spdlog::rotating_logger_st(logger_name, logger_path, max_size, max_files);
+    logger->set_pattern("%v");
+  }
+  return logger;
+}
+std::shared_ptr<spdlog::logger> get_logger_st(const std::string& session_folder, const std::string& base_name,
+                                              int16_t channel_id = 0, int16_t app_id = 0) {
+  bool enable_logging = true;
+
+  std::string logger_name = fmt::format("{}", base_name);
+  {
+    //     std::stringstream base_path_cnf;
+    //     base_path_cnf << session_folder;
+    // #if defined(_WIN32)
+    //     base_path_cnf << "\\";
+    // #else
+    //     base_path_cnf << "/";
+    // #endif
+    //     base_path_cnf << logger_name;
+    //     base_path_cnf << ".cnf";
+    //     // Poco::Path base_path_cnf(session_folder);
+    //     // base_path_cnf.append(fmt::format("{}.cnf", logger_name));
+    //     ConfigFile f(base_path_cnf.str());
+    //     auto       d = static_cast<double>(f.Value(base_name, logger_name, 1.0));
+    //     if (d > 0) {
+    //       enable_logging = true;
+    //     }
+    //     if ((channel_id != 0) || (app_id != 0)) {
+    //       logger_name = fmt::format("{}_{}_{}", logger_name, channel_id, app_id);
+    //     }
+    //     d = static_cast<double>(f.Value(base_name, logger_name, 1.0));
+    //     if (d > 0) {
+    //       enable_logging = true;
+    //     }
+  }
+  if (enable_logging) {
+    std::stringstream base_path_log;
+    base_path_log << session_folder;
+#if defined(_WIN32)
+    base_path_log << "\\";
+#else
+    base_path_log << "/";
+#endif
+    base_path_log << logger_name;
+    base_path_log << ".log";
+    // Poco::Path base_path_log(session_folder);
+    // base_path_log.append(fmt::format("{}.log", logger_name));
+    return get_logger_st_internal(logger_name, base_path_log.str());
+  }
+  return nullptr;
+}
+} // namespace
 
 FpsStatus::FpsStatus(uint64_t app_id, uint64_t channel_id, uint64_t thread_id, bool dump_in_log)
     : FpsStatus(app_id, channel_id, thread_id, 0, 0, dump_in_log) {}
@@ -90,7 +176,8 @@ auto FpsMonitor::set_status_(uint64_t app_id, uint64_t channel_id, uint64_t thre
   return map.first->second->value;
 }
 
-void FpsMonitor::write_header_() {
+void FpsMonitor::write_header_(std::shared_ptr<spdlog::logger> logger_,
+                               std::shared_ptr<spdlog::logger> summary_logger_) {
   {
     std::stringstream ss_header;
     std::stringstream ss_data;
@@ -151,11 +238,11 @@ void FpsMonitor::calculate_fps_() {
   last_write_ts_ = current_ts;
 }
 
-void FpsMonitor::write_data_() {
+void FpsMonitor::write_data_(std::shared_ptr<spdlog::logger> logger_, std::shared_ptr<spdlog::logger> summary_logger_) {
   calculate_fps_();
   if (do_write_header_) {
     do_write_header_ = false;
-    write_header_();
+    write_header_(logger_, summary_logger_);
   }
 
   std::vector<std::tuple<uint64_t, uint64_t, uint64_t>> valid_list;
@@ -234,8 +321,9 @@ void FpsMonitor::write_data_() {
 void FpsMonitor::run_() {
   int sleep_upto_sec = LOG_INTERVAL_SEC;
 
-  logger_             = get_logger_st(session_dir_, file_name_);
-  summary_logger_     = get_logger_st(session_dir_, fmt::format("{}_summary", file_name_));
+  std::shared_ptr<spdlog::logger> logger_         = get_logger_st(session_dir_, file_name_);
+  std::shared_ptr<spdlog::logger> summary_logger_ = get_logger_st(session_dir_, fmt::format("{}_summary", file_name_));
+
   auto last_list_size = resource_map_.size();
   do_write_header_    = true;
 
@@ -251,12 +339,12 @@ void FpsMonitor::run_() {
           do_write_header_ = true;
         }
       }
-      write_data_();
+      write_data_(logger_, summary_logger_);
     }
     std::this_thread::sleep_for(std::chrono::seconds(1));
   }
 
-  write_data_();
+  write_data_(logger_, summary_logger_);
 }
 
 std::atomic<float>& FpsMonitor::get_fps_(uint64_t app_id, uint64_t channel_id, uint64_t thread_id) {

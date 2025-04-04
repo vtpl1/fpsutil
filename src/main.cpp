@@ -20,10 +20,10 @@ void run(std::atomic_uint_fast64_t& monitor_set_status, int millis) {
   }
 }
 
-auto main3(int /*argc*/, char const* /*argv*/[]) -> int {
+auto main(int /*argc*/, char const* /*argv*/[]) -> int {
   std::cout << "Started\n";
 
-  FpsMonitor::getInstance();
+  FpsMonitor::getInstance("session", "fps1");
   std::vector<std::thread> threads;
 
   const int thread_per_group{10};
@@ -65,7 +65,7 @@ auto main2(int /*argc*/, char const* /*argv*/[]) -> int {
   return 0;
 }
 
-auto main(int /*argc*/, char const* /*argv*/[]) -> int {
+auto main3(int /*argc*/, char const* /*argv*/[]) -> int {
   std::cout << "Hello World\n";
   int        count = 100;
   // int64_t    ts    = 0;

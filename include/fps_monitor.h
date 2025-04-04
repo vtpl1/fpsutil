@@ -40,9 +40,7 @@ private:
   std::string session_dir_;
   std::string file_name_;
 
-  std::shared_ptr<spdlog::logger> logger_;
-  std::shared_ptr<spdlog::logger> summary_logger_;
-  std::unique_ptr<std::thread>    thread_;
+  std::unique_ptr<std::thread> thread_;
 
   std::mutex resource_map_mtx_;
 
@@ -55,21 +53,22 @@ private:
   std::atomic<float>&        get_fps_(uint64_t app_id, uint64_t channel_id, uint64_t thread_id);
   void                       calculate_fps_();
 
-  void write_data_();
-  void write_header_();
+  void write_data_(std::shared_ptr<spdlog::logger> logger_, std::shared_ptr<spdlog::logger> summary_logger_);
+  void write_header_(std::shared_ptr<spdlog::logger> logger_, std::shared_ptr<spdlog::logger> summary_logger_);
   void run_();
 
   FpsMonitor(std::string session_dir, std::string file_name);
   void shutDown();
   ~FpsMonitor();
+  static FpsMonitor&                getInstance();
 
 public:
-  static FpsMonitor&                getInstance();
+
   static FpsMonitor&                getInstance(std::string session_dir, std::string file_name);
   static std::atomic_uint_fast64_t& set_status(uint64_t app_id, uint64_t channel_id, uint64_t thread_id,
                                                bool dump_in_log = true);
   static std::atomic<float>&        get_fps(uint64_t app_id, uint64_t channel_id, uint64_t thread_id);
-  static void close();
+  static void                       close();
 };
 
 #endif // fps_monitor_h

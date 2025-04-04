@@ -3,13 +3,8 @@
   "version": "3.0.0",
   "description": "Fps util",
   "homepage": "http://github.com/fpsutil",
-  "builtin-baseline": "c8696863d371ab7f46e213d8f5ca923c4aef2a00",
   "dependencies": [
     "fmt",
-    {
-      "name": "logutil",
-      "version>=": "3.2.0"
-    },
     "spdlog"
   ]
 }
