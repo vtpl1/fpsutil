@@ -158,12 +158,36 @@ auto FpsMonitor::set_status(uint64_t app_id, uint64_t channel_id, uint64_t threa
     -> std::atomic_uint_fast64_t& {
   return FpsMonitor::getInstance().set_status_(app_id, channel_id, thread_id, dump_in_log);
 }
+auto FpsMonitor::set_status_reference(uint64_t app_id, uint64_t channel_id, uint64_t thread_id, bool dump_in_log)
+    -> void {
+  return FpsMonitor::getInstance().set_status_reference_(app_id, channel_id, thread_id, dump_in_log);
+}
+
+auto FpsMonitor::set_status_reference_(uint64_t app_id, uint64_t channel_id, uint64_t thread_id, bool dump_in_log)
+    -> void {
+  auto key = std::tuple<uint64_t, uint64_t, uint64_t>(app_id, channel_id, thread_id);
+  auto itr = resource_map_reference_.end();
+  {
+    const std::lock_guard<std::mutex> lock(resource_map_reference_mtx_);
+
+    itr = resource_map_reference_.find(key);
+  }
+  if (itr != resource_map_reference_.end()) {
+    itr->second++;
+    return;
+  }
+  {
+    const std::lock_guard<std::mutex> lock(resource_map_reference_mtx_);
+    auto map = resource_map_reference_.emplace(key, set_status_(app_id, channel_id, thread_id, dump_in_log));
+  }
+}
 
 auto FpsMonitor::set_status_(uint64_t app_id, uint64_t channel_id, uint64_t thread_id, bool dump_in_log)
     -> std::atomic_uint_fast64_t& {
+  auto key = std::tuple<uint64_t, uint64_t, uint64_t>(app_id, channel_id, thread_id);
+
   const std::lock_guard<std::mutex> lock(resource_map_mtx_);
 
-  auto key = std::tuple<uint64_t, uint64_t, uint64_t>(app_id, channel_id, thread_id);
   auto itr = resource_map_.find(key);
   if (itr != resource_map_.end()) {
     itr->second->value++;
@@ -361,4 +385,8 @@ std::atomic<float>& FpsMonitor::get_fps_(uint64_t app_id, uint64_t channel_id, u
 
 std::atomic<float>& FpsMonitor::get_fps(uint64_t app_id, uint64_t channel_id, uint64_t thread_id) {
   return FpsMonitor::getInstance().get_fps_(app_id, channel_id, thread_id);
+}
+
+void set_status(uint64_t app_id, uint64_t channel_id, uint64_t thread_id) {
+  return FpsMonitor::set_status_reference(app_id, channel_id, thread_id);
 }

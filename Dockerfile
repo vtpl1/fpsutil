@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:20.04
 
 ENV SHELL /bin/bash
 
@@ -12,13 +12,13 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 RUN wget -O cmake.sh https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1-linux-x86_64.sh \
     && sh cmake.sh --prefix=/usr/local/ --exclude-subdir && rm -rf cmake.sh
 
-ARG LLVM_VERSION=18
-RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh ${LLVM_VERSION} all
+# ARG LLVM_VERSION=18
+# RUN wget https://apt.llvm.org/llvm.sh && chmod +x llvm.sh && ./llvm.sh ${LLVM_VERSION} all
 
-ENV PATH="${PATH}:/usr/lib/llvm-${LLVM_VERSION}/bin"
+# ENV PATH="${PATH}:/usr/lib/llvm-${LLVM_VERSION}/bin"
 
-RUN pip3 install -U pip
-RUN pip3 install bump2version
+# RUN pip3 install -U pip
+# RUN pip3 install bump2version
 
 ARG USERNAME=vscode
 ARG USER_UID=1000
